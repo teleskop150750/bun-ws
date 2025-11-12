@@ -16,9 +16,9 @@ const server = Bun.serve({
     },
   },
   routes: {
-    "/": () => new Response(Bun.file("./assets/index.html")),
-    "/ws-client": () => new Response(Bun.file("./assets/client.html")),
-    "/ws-sender": () => new Response(Bun.file("./assets/sender.html")),
+    "/": () => new Response(Bun.file(`${import.meta.dir}/assets/index.html`)),
+    "/ws-client": () => new Response(Bun.file(`${import.meta.dir}/assets/client.html`)),
+    "/ws-sender": () => new Response(Bun.file(`${import.meta.dir}/assets/sender.html`)),
     "/broadcast/:id/:name": (req, server) => {
       server.upgrade(req, {
         data: { id: Number(req.params.id), name: req.params.name },
