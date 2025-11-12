@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SSE Client</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+    input, button { padding: 10px; margin: 5px 0; font-size: 14px; }
+    input { width: 300px; }
+    button { background: #0066cc; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #0052a3; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    #messages { border: 1px solid #ddd; padding: 10px; margin-top: 20px; height: 300px; overflow-y: auto; background: #f9f9f9; }
+    .message { margin: 5px 0; padding: 5px; background: white; border-radius: 3px; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+    .connected { background: #d4edda; color: #155724; }
+    .disconnected { background: #f8d7da; color: #721c24; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <a href="/">← Назад</a>
+  <h1>SSE Client</h1>
+  
+  <div>
+    <label>ID: <input type="number" id="sseId" value="1" /></label><br>
+    <button id="connectBtn" onclick="connect()">Подключиться</button>
+    <button id="disconnectBtn" onclick="disconnect()" disabled>Отключиться</button>
+  </div>
+  
+  <div id="status" class="status disconnected">Отключено</div>
+  
+  <div id="messages"></div>
+
+  <template id="message-template">
+    <div class="message">
+      <span class="message-time"></span> - <span class="message-text"></span>
+    </div>
+  </template>
+
+  <script>
+    let eventSource = null;
+    
+    function connect() {
+      const id = document.getElementById('sseId').value;
+      const url = '/sse/' + id;
+      
+      eventSource = new EventSource(url);
+      
+      eventSource.onopen = () => {
+        addMessage('✓ Подключено к SSE потоку', 'green');
+        document.getElementById('status').className = 'status connected';
+        document.getElementById('status').textContent = 'Подключено (ID: ' + id + ')';
+        document.getElementById('connectBtn').disabled = true;
+        document.getElementById('disconnectBtn').disabled = false;
+      };
+      
+      eventSource.onmessage = (event) => {
+        addMessage('← ' + event.data, 'blue');
+      };
+      
+      eventSource.onerror = (error) => {
+        addMessage('✗ Ошибка SSE соединения', 'red');
+        if (eventSource.readyState === EventSource.CLOSED) {
+          disconnect();
+        }
+      };
+    }
+    
+    function disconnect() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      addMessage('✗ Соединение закрыто', 'orange');
+      document.getElementById('status').className = 'status disconnected';
+      document.getElementById('status').textContent = 'Отключено';
+      document.getElementById('connectBtn').disabled = false;
+      document.getElementById('disconnectBtn').disabled = true;
+    }
+    
+    function addMessage(text, color) {
+      const messagesDiv = document.getElementById('messages');
+      const template = document.getElementById('message-template');
+      const clone = template.content.cloneNode(true);
+      
+      const message = clone.querySelector('.message');
+      message.style.borderLeft = '3px solid ' + color;
+      
+      const timeSpan = clone.querySelector('.message-time');
+      timeSpan.textContent = new Date().toLocaleTimeString();
+      
+      const textSpan = clone.querySelector('.message-text');
+      textSpan.textContent = text;
+      
+      messagesDiv.appendChild(clone);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>

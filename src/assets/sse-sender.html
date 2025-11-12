@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SSE Sender</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+    input, button { padding: 10px; margin: 5px 0; font-size: 14px; }
+    input { width: 300px; }
+    button { background: #0066cc; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #0052a3; }
+    #log { border: 1px solid #ddd; padding: 10px; margin-top: 20px; height: 300px; overflow-y: auto; background: #f9f9f9; }
+    .log-entry { margin: 5px 0; padding: 5px; background: white; border-radius: 3px; }
+    .success { border-left: 3px solid green; }
+    .error { border-left: 3px solid red; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <a href="/">← Назад</a>
+  <h1>SSE Sender</h1>
+  <p>Отправить событие в SSE поток по ID через HTTP запрос</p>
+
+  <div>
+    <label>Target ID: <input type="number" id="targetId" value="1" /></label><br>
+    <button onclick="sendEvent()">Отправить событие</button>
+  </div>
+
+  <div id="log"></div>
+
+  <template id="log-template">
+    <div class="log-entry">
+      <span class="log-time"></span> - <span class="log-text"></span>
+    </div>
+  </template>
+
+  <script>
+    async function sendEvent() {
+      const id = document.getElementById('targetId').value;
+
+      try {
+        const response = await fetch('/sse-send/' + id);
+        const text = await response.text();
+        
+        if (response.ok) {
+          addLog('✓ ' + text, 'success');
+        } else {
+          addLog('✗ ' + text, 'error');
+        }
+      } catch (error) {
+        addLog('✗ Ошибка: ' + error.message, 'error');
+      }
+    }
+
+    function addLog(text, className) {
+      const logDiv = document.getElementById('log');
+      const template = document.getElementById('log-template');
+      const clone = template.content.cloneNode(true);
+      
+      const entry = clone.querySelector('.log-entry');
+      entry.classList.add(className);
+      
+      const timeSpan = clone.querySelector('.log-time');
+      timeSpan.textContent = new Date().toLocaleTimeString();
+      
+      const textSpan = clone.querySelector('.log-text');
+      textSpan.textContent = text;
+      
+      logDiv.appendChild(clone);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>
