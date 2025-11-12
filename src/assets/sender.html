@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSocket Sender</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      input,
+      button {
+        padding: 10px;
+        margin: 5px 0;
+        font-size: 14px;
+      }
+      input {
+        width: 300px;
+      }
+      button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #0052a3;
+      }
+      #log {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-top: 20px;
+        height: 300px;
+        overflow-y: auto;
+        background: #f9f9f9;
+      }
+      .log-entry {
+        margin: 5px 0;
+        padding: 5px;
+        background: white;
+        border-radius: 3px;
+      }
+      .success {
+        border-left: 3px solid green;
+      }
+      .error {
+        border-left: 3px solid red;
+      }
+      a {
+        color: #0066cc;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/">← Назад</a>
+    <h1>WebSocket Sender</h1>
+    <p>Отправить сообщение в WebSocket по ID через HTTP запрос</p>
+
+    <div>
+      <label>Target ID: <input type="number" id="targetId" value="1" /></label
+      ><br />
+      <button onclick="sendEvent()">Отправить тестовое сообщение</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+      async function sendEvent() {
+        const id = document.getElementById("targetId").value;
+
+        try {
+          const response = await fetch("/send-event/" + id);
+          const text = await response.text();
+          addLog("✓ " + text, "success");
+        } catch (error) {
+          addLog("✗ Ошибка: " + error.message, "error");
+        }
+      }
+
+      function addLog(text, className) {
+        const logDiv = document.getElementById("log");
+        const entry = document.createElement("div");
+        entry.className = "log-entry " + className;
+        entry.textContent = new Date().toLocaleTimeString() + " - " + text;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+    </script>
+  </body>
+</html>

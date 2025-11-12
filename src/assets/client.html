@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSocket Client</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+
+      input,
+      button {
+        padding: 10px;
+        margin: 5px 0;
+        font-size: 14px;
+      }
+
+      input {
+        width: 300px;
+      }
+
+      button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      button:hover {
+        background: #0052a3;
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      #messages {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-top: 20px;
+        height: 300px;
+        overflow-y: auto;
+        background: #f9f9f9;
+      }
+
+      .message {
+        margin: 5px 0;
+        padding: 5px;
+        background: white;
+        border-radius: 3px;
+      }
+
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+
+      .connected {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      a {
+        color: #0066cc;
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="/">← Назад</a>
+    <h1>WebSocket Client</h1>
+
+    <div>
+      <label>ID: <input type="number" id="wsId" value="1" /></label><br />
+      <label>Имя: <input type="text" id="wsName" value="User" /></label><br />
+      <button id="connectBtn" onclick="connect()">Подключиться</button>
+      <button id="disconnectBtn" onclick="disconnect()" disabled>
+        Отключиться
+      </button>
+    </div>
+
+    <div id="status" class="status disconnected">Отключено</div>
+
+    <div>
+      <input
+        type="text"
+        id="messageInput"
+        placeholder="Введите сообщение"
+        disabled
+      />
+      <button id="sendBtn" onclick="sendMessage()" disabled>Отправить</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <script>
+      let ws = null;
+
+      function connect() {
+        const id = document.getElementById("wsId").value;
+        const name = document.getElementById("wsName").value;
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const url =
+          protocol +
+          "//" +
+          window.location.host +
+          "/broadcast/" +
+          id +
+          "/" +
+          name;
+
+        ws = new WebSocket(url);
+
+        ws.onopen = () => {
+          addMessage("✓ Подключено к WebSocket", "green");
+          document.getElementById("status").className = "status connected";
+          document.getElementById("status").textContent =
+            "Подключено (ID: " + id + ")";
+          document.getElementById("connectBtn").disabled = true;
+          document.getElementById("disconnectBtn").disabled = false;
+          document.getElementById("messageInput").disabled = false;
+          document.getElementById("sendBtn").disabled = false;
+        };
+
+        ws.onmessage = (event) => {
+          addMessage("← " + event.data, "blue");
+        };
+
+        ws.onerror = (error) => {
+          addMessage("✗ Ошибка WebSocket", "red");
+        };
+
+        ws.onclose = () => {
+          addMessage("✗ Соединение закрыто", "orange");
+          document.getElementById("status").className = "status disconnected";
+          document.getElementById("status").textContent = "Отключено";
+          document.getElementById("connectBtn").disabled = false;
+          document.getElementById("disconnectBtn").disabled = true;
+          document.getElementById("messageInput").disabled = true;
+          document.getElementById("sendBtn").disabled = true;
+        };
+      }
+
+      function disconnect() {
+        if (ws) {
+          ws.close();
+          ws = null;
+        }
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value;
+        if (ws && message) {
+          ws.send(message);
+          addMessage("→ " + message, "gray");
+          input.value = "";
+        }
+      }
+
+      function addMessage(text, color) {
+        const messagesDiv = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+        messageDiv.style.borderLeft = "3px solid " + color;
+        messageDiv.textContent = new Date().toLocaleTimeString() + " - " + text;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") sendMessage();
+        });
+    </script>
+  </body>
+</html>
