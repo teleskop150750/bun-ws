@@ -27,7 +27,7 @@ const server = Bun.serve({
     "/send-event/:id": (req) => {
       const id = Number(req.params.id);
       const message = `Hello to WebSocket ID ${id}`;
-      server.publish(`broadcast:${id}`, message);
+      server.publish(`broadcast:${id}`, message, true);
       return new Response(`Sent message to WebSocket ID ${id}`);
     },
   },
